@@ -1,0 +1,120 @@
+---
+title: "Regression Trees"
+author: "Md Zishan Hussain"
+date: "26 August 2017"
+output: word_document
+---
+
+In this blog we fit a regression tree to the Boston Data set. 
+
+Getting and Setting the working directory.
+
+```{r}
+getwd()
+setwd("D://GitHub//stepupanalytics_Blog")
+```
+
+Firstly, we need to install and require the "MASS" and "tree" package in R. install.packages() function will help you to install package and library() function will help to call the required package.
+If you want to know more about the package then use Help() function in R.
+
+```{r}
+install.packages("MASS")
+library(MASS)
+help(pack = "MASS")
+install.packages("tree")
+library(tree)
+```
+
+The set.seed()function in R takes an (arbitrary) integer argument. So we can take any argument, say, 1 or 123 or 300 or 12345 to get the reproducible random numbers.
+
+```{r}
+set.seed(1)
+```
+
+now, we create a training data set labeled as train.Boston below, and fit the tree to the training data.
+The function sample() takes arguments as follows:
+1. a vector "x" of one or more elements or a data set.
+2. a positive number "n", the number of items to choose.
+
+```{r}
+?sample
+train.Boston.Boston <- sample(1:nrow(Boston), nrow(Boston)/2)
+```
+
+To get the names of the variables of the data set.
+
+```{r}
+?names
+names(Boston)
+```
+
+To get the dimension of a data frame, array or matrix
+
+```{r}
+?dim
+dim(Boston)
+```
+
+Fitting a regression tree:
+the function tree() takes the argument as follows:
+1. a formula expression. left hand side of the formula should be the response variable which will be a numeric vector and right hand side should be a series of numeric or factor variables separated by "+".
+2. a data set.
+3. a subset, an expression specifying the subset of cases to be used.
+```{r}
+?tree
+model.Boston <- tree(medv~., data = Boston,subset = train.Boston)  
+```
+
+Notice that the output of summary() function indicates that only three of the variables have been used for construction the tree.
+
+```{r}
+summary(model.Boston)
+```
+
+Plotting the model 
+
+```{r}
+plot(model.Boston)
+```
+
+Now, we use cv.tree() function to see whether pruning the tree will improve performance or not. 
+
+```{r}
+cv.Boston <- cv.tree(model.Boston)
+```
+
+plotting the cv.Boston to analyse visually.
+
+```{r}
+plot(cv.Boston$size, cv.Boston$dev, type = "b")
+```
+
+```{r}
+prune.Boston <- prune.tree(model.Boston, best = 5)
+```
+
+plotting the above tree model.
+
+```{r}
+plot(prune.Boston)
+```
+
+Making prediction is easy, using predict() function we can predict. It takes the following arguments as follow:
+1. a model object for which prediction is desired.
+
+```{r}
+?predict
+predict.Boston <- predict(model.Boston, newdata = Boston[-train.Boston,])
+```
+
+
+
+```{r}
+test.Boston <- Boston[-train.Boston,"medv"]
+head(test.Boston)
+plot(predict.Boston,test.Boston)
+abline(0,1)
+mean((predict.Boston-test.Boston)^2)
+```
+
+In other words, the test set MSE assicuated with the regression tree us 30.19. the sqare root of the MSE is around 5.49,indicating that this model leads to test predictions that are within around $5494 of the true median home value for the suburb.
